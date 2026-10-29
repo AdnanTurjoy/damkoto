@@ -4,15 +4,18 @@
  *   tsx scripts/db.ts seed        reference data (categories, products, locations) — safe in production
  *   tsx scripts/db.ts seed:demo   development-only sample reports (is_demo = true)
  *
- * Uses DATABASE_URL when set, otherwise the local PGlite directory.
+ * Loads .env / .env.local like Next.js. Uses MIGRATION_DATABASE_URL (Supabase
+ * session pooler, port 5432) when set, else DATABASE_URL, else local PGlite.
  */
 import path from "node:path";
+import { loadEnvConfig } from "@next/env";
 import { createDatabase, createPgliteDatabase } from "../src/lib/db/client";
 import { seedDemoData, seedReferenceData } from "../src/db/seed";
 
 async function main() {
+  loadEnvConfig(process.cwd(), process.env.NODE_ENV !== "production");
   const command = process.argv[2];
-  const url = process.env.DATABASE_URL?.trim();
+  const url = (process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL)?.trim();
   const migrationsFolder = path.join(process.cwd(), "supabase/migrations");
 
   if (url) {
