@@ -18,18 +18,46 @@ export interface Viewport {
 }
 
 function ViewportWatcher({ onChange }: { onChange: (v: Viewport) => void }) {
+  const lastKey = useRef("");
+  const fitted = useRef(false);
   const map = useMapEvents({
     moveend: () => emit(),
   });
+
+  // Only report real, changed viewports. A hidden (0×0) map — e.g. the
+  // mobile list tab — makes Leaflet emit degenerate bounds repeatedly,
+  // which would otherwise loop through parent state updates.
   const emit = () => {
+    const size = map.getSize();
+    if (size.x === 0 || size.y === 0) return;
     const b = map.getBounds();
-    onChange({ bbox: [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()], zoom: map.getZoom() });
+    const bbox: Viewport["bbox"] = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
+    const zoom = map.getZoom();
+    const key = `${bbox.map((n) => n.toFixed(4)).join(",")}@${zoom}`;
+    if (key === lastKey.current) return;
+    lastKey.current = key;
+    onChange({ bbox, zoom });
   };
+
   useEffect(() => {
-    map.fitBounds(BD_BOUNDS, { animate: false });
-    emit();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
-  }, []);
+    const container = map.getContainer();
+    const fitWhenVisible = () => {
+      map.invalidateSize({ animate: false });
+      const size = map.getSize();
+      if (size.x === 0 || size.y === 0) return;
+      if (!fitted.current) {
+        fitted.current = true;
+        map.fitBounds(BD_BOUNDS, { animate: false });
+      }
+      emit();
+    };
+    fitWhenVisible();
+    // Re-measure when the container is shown or resized (mobile map/list toggle).
+    const observer = new ResizeObserver(fitWhenVisible);
+    observer.observe(container);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- attach once per map instance
+  }, [map]);
   return null;
 }
 

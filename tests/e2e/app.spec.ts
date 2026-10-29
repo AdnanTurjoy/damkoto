@@ -133,4 +133,21 @@ test.describe("mobile", () => {
     await page.getByRole("dialog").getByRole("button", { name: /ফলাফল/ }).click();
     await expect(page.getByRole("dialog")).toBeHidden();
   });
+
+  test("map/list toggle does not loop or log errors", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
+    page.on("pageerror", (e) => errors.push(e.message));
+    await page.goto("/map");
+    await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible();
+    for (let i = 0; i < 3; i++) {
+      await page.getByRole("tab", { name: "তালিকা" }).click();
+      await expect(page.locator("[data-report]").first()).toBeVisible();
+      await page.getByRole("tab", { name: "ম্যাপ" }).click();
+      await expect(page.locator(".leaflet-container")).toBeVisible();
+    }
+    await page.setViewportSize({ width: 1360, height: 900 });
+    await page.waitForTimeout(1000);
+    expect(errors.filter((e) => /Maximum update depth|destroy is not a function/.test(e))).toEqual([]);
+  });
 });
