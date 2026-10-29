@@ -1,5 +1,6 @@
 import type { Database } from "@/lib/db/client";
 import { env } from "@/config/env";
+import { officialPricesForProduct } from "@/features/official-prices/service";
 import { dateWindow, PERIODS, type Period } from "./filters";
 import {
   compareGroups,
@@ -42,12 +43,12 @@ export async function loadComparison(db: Database, params: Params) {
     product = await resolveProductKey(db, q);
   }
 
-  if (!product) return { product: null, q, groupBy, period, sets: [], activeSet: null, groups: [], trend: [], trendGroups: [] };
+  if (!product) return { product: null, q, groupBy, period, sets: [], activeSet: null, groups: [], trend: [], trendGroups: [], official: [] };
 
   const sets = await getComparisonSets(db, product.key, window, options);
   const requested = decodeSetId(read(params, "set"));
   const activeSet = sets.find((s) => requested && s.baseUnit === requested.baseUnit && s.variantKey === requested.variantKey && s.brandKey === requested.brandKey) ?? sets[0] ?? null;
-  if (!activeSet) return { product, q, groupBy, period, sets, activeSet: null, groups: [], trend: [], trendGroups: [] };
+  if (!activeSet) return { product, q, groupBy, period, sets, activeSet: null, groups: [], trend: [], trendGroups: [], official: await officialPricesForProduct(db, product.key) };
 
   const groups = await compareGroups(db, { productKey: product.key, set: activeSet, groupBy, window }, options);
   const trendGroups = groups.filter((g) => g.count >= 2).slice(0, 3);
@@ -56,7 +57,8 @@ export async function loadComparison(db: Database, params: Params) {
     { productKey: product.key, set: activeSet, groupBy, window, groupIds: trendGroups.map((g) => g.groupId) },
     options,
   );
-  return { product, q, groupBy, period, sets, activeSet, groups, trend, trendGroups };
+  const official = await officialPricesForProduct(db, product.key, activeSet.baseUnit);
+  return { product, q, groupBy, period, sets, activeSet, groups, trend, trendGroups, official };
 }
 
 export type ComparisonResult = Awaited<ReturnType<typeof loadComparison>>;

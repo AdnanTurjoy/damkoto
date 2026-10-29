@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Flag, FolderTree, LayoutDashboard, MessageSquare, Settings } from "lucide-react";
+import { FileText, Flag, FolderTree, Landmark, LayoutDashboard, MessageSquare, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/lib/i18n/client";
@@ -15,6 +15,7 @@ export function AdminNav() {
     { href: "/admin/comments", label: t("admin.nav.comments"), icon: MessageSquare },
     { href: "/admin/content-reports", label: t("admin.nav.contentReports"), icon: Flag },
     { href: "/admin/categories", label: t("admin.nav.categories"), icon: FolderTree },
+    { href: "/admin/official-prices", label: t("admin.nav.official"), icon: Landmark },
     { href: "/admin/settings", label: t("admin.nav.settings"), icon: Settings },
   ];
   return (

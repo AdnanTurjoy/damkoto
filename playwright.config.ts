@@ -28,6 +28,7 @@ export default defineConfig({
       DEV_AUTH_ENABLED: "true",
       SHOW_DEMO_DATA: "true",
       DATABASE_URL: "",
+      MIGRATION_DATABASE_URL: "",
       NEXT_PUBLIC_SUPABASE_URL: "",
       CLOUDINARY_CLOUD_NAME: "",
     },

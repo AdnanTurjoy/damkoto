@@ -5,6 +5,7 @@ import { Container, EmptyState, PageHeader } from "@/components/states";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input, Label, Select } from "@/components/ui/input";
+import { OfficialPriceBox } from "@/features/official-prices/components/official-price-box";
 import { GROUP_BY } from "@/features/prices/compare";
 import { loadComparison } from "@/features/prices/compare-page";
 import { TrendChart } from "@/features/prices/components/trend-chart";
@@ -25,7 +26,7 @@ export default async function ComparePage({ searchParams }: PageProps<"/compare"
   const { t, locale } = await getI18n();
   const params = await searchParams;
   const result = await loadComparison(await getDb(), params);
-  const { product, sets, activeSet, groups, trend, trendGroups, groupBy, period } = result;
+  const { product, sets, activeSet, groups, trend, trendGroups, groupBy, period, official } = result;
   const unitLabel = activeSet ? t(`units.${activeSet.baseUnit}` as MessageKey) : "";
   const per = t("common.perUnit", { unit: unitLabel });
   const globalMin = Math.min(...groups.map((g) => g.min));
@@ -77,7 +78,10 @@ export default async function ComparePage({ searchParams }: PageProps<"/compare"
       {!product ? (
         <EmptyState className="mt-8" icon={<BarChart3 />} title={t("compare.title")} text={t("compare.start")} />
       ) : !activeSet ? (
-        <EmptyState className="mt-8" title={productName} text={t("compare.noData")} action={<Link href="/submit" className={buttonClasses("accent")}>{t("nav.submit")}</Link>} />
+        <div className="mt-8 space-y-6">
+          <OfficialPriceBox prices={official} t={t} locale={locale} />
+          <EmptyState title={productName} text={t("compare.noData")} action={<Link href="/submit" className={buttonClasses("accent")}>{t("nav.submit")}</Link>} />
+        </div>
       ) : (
         <div className="mt-8 space-y-6">
           {sets.length > 1 && (
@@ -103,6 +107,8 @@ export default async function ComparePage({ searchParams }: PageProps<"/compare"
               </div>
             </div>
           )}
+
+          <OfficialPriceBox prices={official} t={t} locale={locale} />
 
           <Card className="overflow-hidden">
             <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-5 py-4">

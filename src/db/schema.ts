@@ -223,7 +223,7 @@ export const moderationActions = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     actorId: uuid("actor_id").references(() => profiles.id, { onDelete: "set null" }),
-    targetType: text("target_type", { enum: ["report", "comment", "category", "content_report", "profile"] }).notNull(),
+    targetType: text("target_type", { enum: ["report", "comment", "category", "content_report", "profile", "official_price"] }).notNull(),
     targetId: text("target_id").notNull(),
     action: text("action").notNull(),
     note: text("note"),
@@ -246,3 +246,45 @@ export const geocodeCache = pgTable("geocode_cache", {
   result: jsonb("result").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const OFFICIAL_CATEGORIES = ["essentials", "vegetables", "lpg", "fuel", "fertilizer", "medicine", "utility", "transport", "gold", "other"] as const;
+export const OFFICIAL_SOURCES = ["TCB", "DAM", "BERC", "BPC", "MOC", "DGDA", "BAJUS", "BRTA", "BIWTA", "RAILWAY", "WASA", "BBS", "MOA", "OTHER"] as const;
+
+/**
+ * Prices published by government or regulated bodies, entered by staff from
+ * the official source. Kept separate from community reports and always shown
+ * with its source, link and publication date.
+ */
+export const officialPrices = pgTable(
+  "official_prices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    category: text("category", { enum: OFFICIAL_CATEGORIES }).notNull(),
+    source: text("source", { enum: OFFICIAL_SOURCES }).notNull(),
+    itemBn: text("item_bn").notNull(),
+    itemEn: text("item_en").notNull(),
+    /** Links to the catalog so report and compare pages can show it. */
+    productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
+    priceMin: numeric("price_min", { precision: 12, scale: 2 }).notNull(),
+    priceMax: numeric("price_max", { precision: 12, scale: 2 }),
+    quantity: numeric("quantity", { precision: 12, scale: 3 }).notNull().default("1"),
+    unit: text("unit").notNull(),
+    /** Overrides the unit label, e.g. "প্রতি কিলোওয়াট-ঘণ্টা". */
+    unitLabel: text("unit_label"),
+    baseUnit: text("base_unit"),
+    unitMin: numeric("unit_min", { precision: 14, scale: 4 }),
+    unitMax: numeric("unit_max", { precision: 14, scale: 4 }),
+    area: text("area").notNull(),
+    effectiveDate: date("effective_date", { mode: "string" }).notNull(),
+    sourceUrl: text("source_url"),
+    note: text("note"),
+    isActive: boolean("is_active").notNull().default(true),
+    createdBy: uuid("created_by").references(() => profiles.id, { onDelete: "set null" }),
+    ...timestamps,
+  },
+  (t) => [
+    index("official_prices_category_idx").on(t.category, t.effectiveDate.desc()),
+    index("official_prices_product_idx").on(t.productId, t.effectiveDate.desc()),
+    uniqueIndex("official_prices_entry_key").on(t.source, t.itemEn, t.area, t.effectiveDate),
+  ],
+);

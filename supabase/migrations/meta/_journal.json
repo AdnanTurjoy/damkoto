@@ -15,6 +15,20 @@
       "when": 1793247671328,
       "tag": "0001_security",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793257263491,
+      "tag": "0002_official_prices",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793257263937,
+      "tag": "0003_official_prices_security",
+      "breakpoints": true
     }
   ]
 }

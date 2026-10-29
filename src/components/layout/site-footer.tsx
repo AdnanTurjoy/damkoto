@@ -10,6 +10,7 @@ export async function SiteFooter() {
     { href: "/prices", label: t("nav.prices") },
     { href: "/map", label: t("nav.map") },
     { href: "/compare", label: t("nav.compare") },
+    { href: "/official-prices", label: t("nav.official") },
     { href: "/submit", label: t("nav.submit") },
   ];
   const platform = [

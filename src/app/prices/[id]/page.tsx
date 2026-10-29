@@ -12,6 +12,8 @@ import { canModifyReport, isOwner, isStaff } from "@/features/auth/permissions";
 import { CommentSection } from "@/features/comments/components/comment-section";
 import { ReactionBar } from "@/features/comments/components/reaction-bar";
 import { getReactions, listComments } from "@/features/comments/service";
+import { OfficialPriceBox } from "@/features/official-prices/components/official-price-box";
+import { officialPricesForProduct } from "@/features/official-prices/service";
 import { getDivisionsAndDistricts } from "@/features/locations/queries";
 import { PreviewMap } from "@/features/map/components/preview-map";
 import { encodeSetId } from "@/features/prices/compare";
@@ -65,11 +67,12 @@ export default async function ReportPage({ params }: PageProps<"/prices/[id]">) 
 
   const { t, locale } = await getI18n();
   const db = await getDb();
-  const [related, comments, reactions, { divisions, districts }] = await Promise.all([
+  const [related, comments, reactions, { divisions, districts }, official] = await Promise.all([
     getRelatedReports(db, report, queryOptions()),
     report.status === "published" ? listComments(db, report.id, actor) : Promise.resolve({ comments: [], nextCursor: null }),
     getReactions(db, report.id, actor.clientHash),
     getDivisionsAndDistricts(db),
+    officialPricesForProduct(db, report.productKey, report.baseUnit),
   ]);
 
   const freshness = getFreshness(report.reportDate);
@@ -193,6 +196,7 @@ export default async function ReportPage({ params }: PageProps<"/prices/[id]">) 
 
         <aside className="space-y-6">
           {canModifyReport(owned, actor) && <OwnerActions reportId={report.id} />}
+          <OfficialPriceBox prices={official} t={t} locale={locale} />
           {report.lat != null && report.lng != null && (
             <Card className="overflow-hidden">
               <PreviewMap className="h-56" points={[{ id: report.id, lat: report.lat, lng: report.lng, label: report.productName, approximate: report.locationMethod === "admin" }]} center={[report.lat, report.lng]} zoom={report.locationMethod === "admin" ? 9 : 13} />

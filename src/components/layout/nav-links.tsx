@@ -15,6 +15,7 @@ export function DesktopNav() {
     { href: "/prices", label: t("nav.prices") },
     { href: "/map", label: t("nav.map") },
     { href: "/compare", label: t("nav.compare") },
+    { href: "/official-prices", label: t("nav.official") },
     { href: "/how-it-works", label: t("nav.howItWorks") },
   ];
   return (

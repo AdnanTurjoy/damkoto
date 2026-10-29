@@ -217,6 +217,23 @@ npx playwright install chromium && npm run test:e2e
 - Outlier prices (more than 4× from the 90-day median of at least 5 comparable reports), links, phone numbers and high submission frequency are **flagged** for moderators, never deleted. Abusive language sends a report to pending review and blocks the comment.
 - The profanity list (`src/lib/content-checks.ts`) is deliberately small and should be extended by moderators.
 
+## Adding official prices
+
+Official prices are entered by staff at **/admin/official-prices**: use the form, or paste or upload a CSV with these columns:
+
+```
+category,source,item_bn,item_en,product_slug,price_min,price_max,quantity,unit,unit_label,area,effective_date,source_url,note
+essentials,TCB,আলু,Potato,potato,40,45,1,kg,,ঢাকা,2026-10-29,https://tcb.gov.bd/,
+```
+
+- `category`: essentials, vegetables, lpg, fuel, fertilizer, medicine, utility, transport, gold, other
+- `source`: TCB, DAM, BERC, BPC, MOC, DGDA, BAJUS, BRTA, BIWTA, RAILWAY, WASA, BBS, MOA, OTHER
+- `product_slug` (optional) links the entry to a catalog product (see `src/db/seed-data/catalog.ts`), so it appears on that product's report and compare pages.
+
+An import saves nothing unless every row is valid. Re-entering the same source, item, area and date updates the entry; a new date adds a new publication and keeps the old one as history.
+
+Nothing is scraped automatically. TCB and BERC were unreachable from the development machine, so no importer could be built or verified against their current formats. A daily Vercel Cron importer can be added later once a source's format and terms of use are confirmed.
+
 ## Known limitations
 
 - Staff authentication requires Supabase. There is no public user sign-up, so "contributor" identity is cookie-based per browser, and public profiles are not implemented.

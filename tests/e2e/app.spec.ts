@@ -118,6 +118,35 @@ test.describe("moderation", () => {
   });
 });
 
+test.describe("official prices", () => {
+  test("a moderator adds an official price and visitors see it beside community data", async ({ page }) => {
+    await page.goto("/official-prices");
+    await expect(page.getByText("এখনো কোনো সরকারি দাম যোগ করা হয়নি")).toBeVisible();
+
+    await page.goto("/login?next=/admin/official-prices");
+    await page.getByRole("button", { name: "moderator হিসেবে ঢুকুন" }).click();
+    await expect(page).toHaveURL(/\/admin\/official-prices/);
+    await page.locator("#new-itemBn").fill("আলু (TCB)");
+    await page.locator("#new-itemEn").fill("Potato (TCB)");
+    await page.locator("#new-priceMin").fill("40");
+    await page.locator("#new-priceMax").fill("45");
+    await page.locator("#new-productSlug").selectOption("potato");
+    await page.locator("#new-area").fill("ঢাকা");
+    await page.locator("#new-url").fill("https://tcb.gov.bd/");
+    await page.getByRole("button", { name: "সংরক্ষণ করুন" }).first().click();
+    await expect(page.getByText("সম্পন্ন হয়েছে।")).toBeVisible();
+
+    await page.goto("/official-prices");
+    const row = page.getByRole("row", { name: /আলু \(TCB\)/ });
+    await expect(row).toContainText("৳৪০–৪৫");
+    await expect(row).toContainText("ট্রেডিং কর্পোরেশন অব বাংলাদেশ");
+
+    await page.goto("/compare?q=আলু");
+    await expect(page.getByRole("heading", { name: "সরকারি দাম" })).toBeVisible();
+    await expect(page.getByText("৳৪০–৪৫").first()).toBeVisible();
+  });
+});
+
 test.describe("mobile", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 

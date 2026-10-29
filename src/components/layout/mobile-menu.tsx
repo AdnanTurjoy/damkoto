@@ -14,6 +14,7 @@ export function MobileMenu({ showAdmin }: { showAdmin: boolean }) {
     { href: "/prices", label: t("nav.prices") },
     { href: "/map", label: t("nav.map") },
     { href: "/compare", label: t("nav.compare") },
+    { href: "/official-prices", label: t("nav.official") },
     { href: "/submit", label: t("nav.submit") },
     { href: "/my-contributions", label: t("nav.myContributions") },
     { href: "/how-it-works", label: t("nav.howItWorks") },
